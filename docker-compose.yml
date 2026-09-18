@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_DB: DEFINIR_DB
+      POSTGRES_USER: DEFINIR_USUARIO
+      POSTGRES_PASSWORD: DEFINIR_SENHA
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: flask_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://DEFINIR_USUARIO:DEFINIR_SENHA@db:5432/DEFINIR_DB
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: frontend_app
+    restart: always
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
