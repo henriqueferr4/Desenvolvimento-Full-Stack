@@ -30,20 +30,11 @@ db/
 
 ## 3. Subindo o banco
 
-```bash
-docker compose up -d db
-```
-
 Os scripts de `db/init/` são executados **apenas na primeira criação do volume** `postgres_data`. Para recriar o banco do zero (necessário após alterar o schema):
 
 ```bash
 docker compose down -v
 docker compose up -d db
-```
-
---Requisito para rodar o script que popula o banco
-```bash
-pip install -r db/requirements.txt
 ```
 
 ```bash
