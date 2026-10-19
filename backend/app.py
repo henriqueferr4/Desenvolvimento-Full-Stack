@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
-import os, psycopg
+import os, psycopg, re
 
 app = Flask(__name__)
 
@@ -10,7 +10,7 @@ load_dotenv()   #Pega o .env na pasta raiz do backend, ou acima (pasta raiz do p
 #DB_URL=postgresql://postgres:minhasenha123@localhost:5432/meubanco
 db_url = os.getenv("DB_URL")
 
-valid_searches = ["nome", "cargo", "uf", "orgao"]   #Colunas válidas de pesquisa
+pattern = r'[a-zA-Z\s%_]+'
 
 @app.route("/api/servidores", methods=["GET"])
 def getServidores():
@@ -30,49 +30,63 @@ def getServidores():
             case "nome":
                 try:
                     nome = request.args.get(arg, type=str)
-                    query += " %s = %s"
-                    queryparams.append("nome")
-                    queryparams.append(nome)
+                    if re.fullmatch(pattern, nome):
+                        query += " %s = %s"
+                        queryparams.append("nome")
+                        queryparams.append(nome)
+                    else:
+                        raise ValueError("Valor inválido inserido")
                 except ValueError:
                     result.errors.append("Nome inválido")
             case "cargo":
                 try:
                     cargo = request.args.get(arg, type=str)
-                    query += " %s = %s"
-                    queryparams.append("cargo")
-                    queryparams.append(cargo)
+                    if re.fullmatch(pattern, cargo):
+                        query += " %s = %s"
+                        queryparams.append("cargo")
+                        queryparams.append(cargo)
+                    else:
+                        raise ValueError("Valor inválido inserido")
                 except ValueError:
                     result.errors.append("Cargo inválido")
             case "uf": 
                 try:
                     uf = request.args.get(arg, type=str)
-                    query += " %s = %s"
-                    queryparams.append("uf")
-                    queryparams.append(uf)
+                    if re.fullmatch(pattern, uf):
+                        query += " %s = %s"
+                        queryparams.append("uf")
+                        queryparams.append(uf)
+                    else:
+                        raise ValueError("Valor inválido inserido")
                 except ValueError:
                     result.errors.append("UF inválida")
             case "orgao": 
                 try:
                     orgao = request.args.get(arg, type=str)
-                    query += " %s = %s"
-                    queryparams.append("orgao")
-                    queryparams.append(orgao)
+                    if re.fullmatch(pattern, orgao):
+                        query += " %s = %s"
+                        queryparams.append("orgao")
+                        queryparams.append(orgao)
+                    else:
+                        raise ValueError("Valor inválido inserido")
                 except ValueError:
                     result.errors.append("Órgão inválido")
             case "similar":
                 try:
                     similar = request.args.get(arg, type=str)
-                    query += " %s LIKE %s"
-                    queryparams.append("nome")
-                    queryparams.append(similar)
+                    if re.fullmatch(pattern, similar):
+                        query += " %s LIKE %s"
+                        queryparams.append("nome")
+                        queryparams.append(similar)
+                    else:
+                        raise ValueError("Valor inválido inserido")
                 except ValueError:
                     result.errors.append("Valor inválido")
             case _:
                 result.errors.append("Parâmetro de busca inválido")
 
-    query += " LIMIT 100;"
-    
     if result.errors == []:
+        query += " LIMIT 100;"
         with psycopg.connect(db_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(query, queryparams)
