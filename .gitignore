@@ -2,5 +2,9 @@ __pycache__/
 *.pyc
 node_modules/
 .env
-db/dados_brutos/
-db/dados_tratados/
+
+db/dados_brutos/*
+!db/dados_brutos/.gitkeep
+
+db/dados_tratados/*
+!db/dados_tratados/.gitkeep

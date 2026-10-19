@@ -3,33 +3,33 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE TABLE IF NOT EXISTS aposentados (
     id SERIAL PRIMARY KEY,
     nome TEXT NOT NULL,
-    cpf VARCHAR(14),
+    cpf TEXT,
     matricula_servidor BIGINT,
     nome_orgao TEXT,
-    sigla_orgao VARCHAR(20),
-    codigo_orgao_superior VARCHAR(10),
+    sigla_orgao TEXT,
+    codigo_orgao_superior TEXT,
     cargo TEXT,
-    classe VARCHAR(5),
-    padrao VARCHAR(5),
-    referencia VARCHAR(5),
-    nivel VARCHAR(5),
-    tipo_aposentadoria VARCHAR(30),
-    fundamentacao_inatividade VARCHAR(50),
-    nome_diploma_legal VARCHAR(70),
+    classe TEXT,
+    padrao TEXT,
+    referencia TEXT,
+    nivel TEXT,
+    tipo_aposentadoria TEXT,
+    fundamentacao_inatividade TEXT,
+    nome_diploma_legal TEXT,
     "Dt ocorrencia inatividade" TEXT,
-    ocorrencia_ingresso VARCHAR(60),
+    ocorrencia_ingresso TEXT,
     "Dt ingresso servico publico" TEXT,
     valor_rendimento_liquido DOUBLE PRECISION
 );
 
 CREATE TABLE IF NOT EXISTS carreiras_cargos (
     id SERIAL PRIMARY KEY,
-    nome VARCHAR(60) NOT NULL,
-    cpf VARCHAR(14),
-    codigo_carreira VARCHAR(10),
-    descricao_cargo_emprego VARCHAR(60),
+    nome TEXT NOT NULL,
+    cpf TEXT,
+    codigo_carreira TEXT,
+    descricao_cargo_emprego TEXT,
     uf_upag VARCHAR(2),
-    denominacao_orgao_atuacao VARCHAR(60),
+    denominacao_orgao_atuacao TEXT,
     mes_referencia VARCHAR(2),
     valor_remuneracao DOUBLE PRECISION
 );
@@ -37,26 +37,32 @@ CREATE TABLE IF NOT EXISTS carreiras_cargos (
 CREATE OR REPLACE VIEW vw_servidores AS
 SELECT
     id,
+    'A-' || id::TEXT AS chave,
     nome,
     cpf,
     cargo,
-    NULL::VARCHAR(2) AS uf,
+    NULL::TEXT AS uf,
     nome_orgao AS orgao,
     sigla_orgao,
     'APOSENTADO' AS situacao_vinculo,
-    "Dt ocorrencia inatividade"::TEXT AS data_inatividade,
-    "Dt ingresso servico publico"::TEXT AS data_ingresso_servico_publico,
+    CASE WHEN "Dt ocorrencia inatividade" ~ '^[0-9]{7,8}$'
+         THEN TO_CHAR(TO_DATE(LPAD("Dt ocorrencia inatividade", 8, '0'), 'DDMMYYYY'), 'DD/MM/YYYY')
+    END AS data_inatividade,
+    CASE WHEN "Dt ingresso servico publico" ~ '^[0-9]{7,8}$'
+         THEN TO_CHAR(TO_DATE(LPAD("Dt ingresso servico publico", 8, '0'), 'DDMMYYYY'), 'DD/MM/YYYY')
+    END AS data_ingresso_servico_publico,
     valor_rendimento_liquido AS remuneracao
 FROM aposentados
 UNION ALL
 SELECT
     id,
+    'C-' || id::TEXT AS chave,
     nome,
     cpf,
     descricao_cargo_emprego AS cargo,
-    uf_upag AS uf,
+    uf_upag::TEXT AS uf,
     denominacao_orgao_atuacao AS orgao,
-    NULL::VARCHAR(20) AS sigla_orgao,
+    NULL::TEXT AS sigla_orgao,
     'ATIVO' AS situacao_vinculo,
     NULL::TEXT AS data_inatividade,
     NULL::TEXT AS data_ingresso_servico_publico,
