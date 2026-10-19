@@ -4,24 +4,31 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_DB: DEFINIR_DB
-      POSTGRES_USER: DEFINIR_USUARIO
-      POSTGRES_PASSWORD: DEFINIR_SENHA
+      POSTGRES_DB: executivo_federal_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d executivo_federal_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     container_name: flask_backend
     restart: always
     environment:
-      DATABASE_URL: postgresql://DEFINIR_USUARIO:DEFINIR_SENHA@db:5432/DEFINIR_DB
+      DATABASE_URL: postgresql://postgres:postgres_password@db:5432/executivo_federal_db
     ports:
       - "5000:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -29,6 +36,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:
