@@ -176,7 +176,7 @@ def popular_banco(csv_apos, csv_carr, limite=None):
 
         print("-> Preparando tabelas e suspendendo view...")
         cur.execute("""
-            DROP VIEW IF EXISTS vw_servidores;
+            DROP VIEW IF EXISTS servidores;
 
             DROP INDEX IF EXISTS idx_aposentados_nome_trgm;
             DROP INDEX IF EXISTS idx_aposentados_nome_exato;
@@ -227,9 +227,9 @@ def popular_banco(csv_apos, csv_carr, limite=None):
             print(f"[OK] Carreiras/Cargos carregados via COPY em {time.time() - t0:.2f}s.")
 
         t0 = time.time()
-        print("-> Recriando View vw_servidores e construindo índices...")
+        print("-> Recriando View servidores e construindo índices...")
         cur.execute("""
-            CREATE OR REPLACE VIEW vw_servidores AS
+            CREATE OR REPLACE VIEW servidores AS
             SELECT 
                 id, 'A-' || id::TEXT AS chave, nome, cpf, cargo, NULL::TEXT AS uf, nome_orgao AS orgao,
                 sigla_orgao, 'APOSENTADO' AS situacao_vinculo,
