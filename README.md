@@ -106,7 +106,7 @@ O sistema deverá permitir:
 ## ▶️ Como executar
 
 ```bash
-cp .env .env            # defina POSTGRES_PASSWORD (a senha não pode ter @ / : ? #)
+cp .env.example .env            # defina POSTGRES_PASSWORD (a senha não pode ter @ / : ? #)
 docker compose up -d --build    # banco + API (gunicorn) + frontend (nginx) em http://localhost
 
 # carga dos dados (baixe os CSVs do portal para db/dados_brutos/ antes)
