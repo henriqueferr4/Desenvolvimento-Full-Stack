@@ -76,7 +76,7 @@ def getServidores():
                     try:
                         similar = request.args.get(arg, type=str)
                         if re.fullmatch(pattern, similar):
-                            query += " nome LIKE %s"
+                            query += " nome ILIKE %s"
                             queryparams.append(similar)
                         else:
                             raise ValueError("Valor inválido inserido")
