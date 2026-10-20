@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS carreiras_cargos (
     valor_remuneracao DOUBLE PRECISION
 );
 
-CREATE OR REPLACE VIEW vw_servidores AS
+CREATE OR REPLACE VIEW servidores AS
 SELECT
     id,
     'A-' || id::TEXT AS chave,
