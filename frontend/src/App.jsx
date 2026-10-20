@@ -39,13 +39,20 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const [result, setResult] = useState({ status: "idle" });
   const lastParams = useRef(null);
+  const controller = useRef(null);
 
+  // Só a última requisição vale: ao disparar outra, a anterior é cancelada,
+  // evitando que uma resposta atrasada sobrescreva a mais nova.
   const run = async (params, page = 1) => {
+    controller.current?.abort();
+    const ctrl = new AbortController();
+    controller.current = ctrl;
     setResult((r) => ({ ...r, status: "loading" }));
     try {
-      const data = await fetchServidores(params, page);
-      setResult({ status: "ok", data });
+      const data = await fetchServidores(params, page, ctrl.signal);
+      if (!ctrl.signal.aborted) setResult({ status: "ok", data });
     } catch (e) {
+      if (ctrl.signal.aborted || e.name === "AbortError") return;
       setResult({ status: "error", message: e.message });
     }
   };
@@ -61,6 +68,7 @@ export default function App() {
 
   const handleReset = (e) => {
     e.preventDefault();
+    controller.current?.abort();
     setValues(INITIAL_VALUES);
     setFormError("");
     setResult({ status: "idle" });
@@ -70,32 +78,32 @@ export default function App() {
   const changeMode = (m) => { setMode(m); setFormError(""); };
 
   return (
-    <>
-      <Header />
-      <main className="container">
-        <SearchForm
-          mode={mode}
-          setMode={changeMode}
-          values={values}
-          onChange={(name, v) => setValues((s) => ({ ...s, [name]: v }))}
-          onSubmit={handleSubmit}
-          onReset={handleReset}
-          loading={result.status === "loading"}
-          error={formError}
-        />
-        <Results result={result} onPage={(p) => lastParams.current && run(lastParams.current, p)} />
-      </main>
-      <footer className="footer">
-        <div className="container footer__inner">
-          <div className="footer__about">
-            <span>© {new Date().getFullYear()} GovData</span>
-            <small>Projeto acadêmico desenvolvido no âmbito da disciplina de Sistemas para Internet II</small>
-          </div>
-          <span>
+      <>
+        <Header />
+        <main className="container">
+          <SearchForm
+              mode={mode}
+              setMode={changeMode}
+              values={values}
+              onChange={(name, v) => setValues((s) => ({ ...s, [name]: v }))}
+              onSubmit={handleSubmit}
+              onReset={handleReset}
+              loading={result.status === "loading"}
+              error={formError}
+          />
+          <Results result={result} onPage={(p) => lastParams.current && run(lastParams.current, p)} />
+        </main>
+        <footer className="footer">
+          <div className="container footer__inner">
+            <div className="footer__about">
+              <span>© {new Date().getFullYear()} GovData</span>
+              <small>Projeto acadêmico desenvolvido no âmbito da disciplina de Sistemas para Internet II</small>
+            </div>
+            <span>
             Dados: <a href="https://dados.gov.br" target="_blank" rel="noreferrer">Portal Brasileiro de Dados Abertos</a>
           </span>
-        </div>
-      </footer>
-    </>
+          </div>
+        </footer>
+      </>
   );
 }
