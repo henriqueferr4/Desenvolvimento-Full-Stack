@@ -22,6 +22,7 @@ services:
     build: ./backend
     container_name: flask_backend
     restart: always
+    command: python app.py
     environment:
       DATABASE_URL: postgresql://postgres:postgres_password@db:5432/executivo_federal_db
     ports:
