@@ -22,7 +22,6 @@ db/
 ├── dados_brutos/                # (ignorado no Git) arquivos baixados do portal (.csv / .txt)
 ├── dados_tratados/              # (ignorado no Git) CSVs tratados em UTF-8 (cache)
 ├── popular.py                   # ETL: detecção, limpeza e carga em massa via COPY
-├── requirements.txt             # dependências do ETL (psycopg2-binary)
 └── README.md                    # documentação
 ```
 
@@ -176,10 +175,6 @@ O `popular.py` aplica essa conversão automaticamente após carregar os aposenta
 ## 7. Pipeline de ETL (`popular.py`)
 
 ### Preparação
-
-```bash
-pip install -r db/requirements.txt
-```
 
 Coloque os arquivos brutos (`.csv` ou `.txt`) em `db/dados_brutos/`. O script resolve os diretórios a partir da própria pasta `db/`, então pode ser executado de qualquer lugar.
 
