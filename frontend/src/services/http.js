@@ -20,25 +20,39 @@ export class ApiError extends Error {
   }
 }
 
-// GET em JSON com timeout e mensagens de erro padronizadas
-export async function getJson(path, params = {}) {
+// GET em JSON com timeout e mensagens de erro padronizadas.
+// `signal` (opcional) cancela a requisição; nesse caso o AbortError original é relançado.
+export async function getJson(path, params = {}, { signal } = {}) {
   const query = new URLSearchParams(params).toString();
   const url = `${API_BASE_URL}${path}${query ? `?${query}` : ""}`;
 
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), API_TIMEOUT_MS);
+  let timedOut = false;
+  const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, API_TIMEOUT_MS);
+  const cancel = () => ctrl.abort();
+  if (signal?.aborted) cancel();
+  signal?.addEventListener("abort", cancel, { once: true });
+
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
+    let res;
+    try {
+      res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
+    } catch (e) {
+      if (e.name === "AbortError") throw e;
+      throw new ApiError("Não foi possível conectar à API.", 0); // falha de rede
+    }
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       throw new ApiError(body.erro || body.message || MESSAGES[res.status] || `Erro do servidor (${res.status}).`, res.status);
     }
     return body;
   } catch (e) {
-    if (e.name === "AbortError") throw new ApiError("A busca demorou demais. Refine os filtros e tente novamente.", 408);
-    if (e instanceof TypeError) throw new ApiError("Não foi possível conectar à API.", 0);
+    if (e.name === "AbortError" && timedOut) {
+      throw new ApiError("A busca demorou demais. Refine os filtros e tente novamente.", 408);
+    }
     throw e;
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
   }
 }

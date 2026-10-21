@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const rowKey = (r, i) => String(r.id ?? `${r.nome}-${i}`);
+export const rowKey = (r, i) => String(r.chave ?? `${r.id ?? r.nome}-${i}`);
 
 // Controla quais linhas estão abertas. O estado fica atrelado à lista recebida:
 // ao chegar uma nova página/busca, tudo começa fechado.

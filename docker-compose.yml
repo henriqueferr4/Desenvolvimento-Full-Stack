@@ -1,19 +1,21 @@
+# Copie .env para .env e defina POSTGRES_PASSWORD antes de `docker compose up`.
 services:
   db:
     image: postgres:15-alpine
     container_name: postgres_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: executivo_federal_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: ${POSTGRES_DB:-executivo_federal_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
     ports:
-      - "5432:5432"
+      # só acessível da própria máquina (usado pelo db/popular.py); a API acessa pela rede interna
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d executivo_federal_db"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,12 +23,12 @@ services:
   backend:
     build: ./backend
     container_name: flask_backend
-    restart: always
-    command: python app.py
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://postgres:postgres_password@db:5432/executivo_federal_db
-    ports:
-      - "5000:5000"
+      # a senha não pode ter caracteres especiais de URL (@ / : ? #), ou deve ser codificada
+      DB_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-executivo_federal_db}
+    expose:
+      - "5000"   # só o nginx do frontend precisa acessar a API
     depends_on:
       db:
         condition: service_healthy
@@ -34,7 +36,7 @@ services:
   frontend:
     build: ./frontend
     container_name: frontend_app
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
