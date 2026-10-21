@@ -178,10 +178,6 @@ Durante a limpeza, o `popular.py` valida cada data; datas inexistentes (ex.: `31
 
 ### Preparação
 
-```bash
-pip install -r db/requirements.txt
-```
-
 Coloque os arquivos brutos (`.csv` ou `.txt`) em `db/dados_brutos/`. O script resolve os diretórios a partir da própria pasta `db/`, então pode ser executado de qualquer lugar.
 
 ### Execução
